@@ -1,0 +1,17 @@
+[Unit]
+Description=Quorum service
+Documentation=https://github.com/monetha/platform-on-quorum-ami
+After=multi-user.target
+Requires=multi-user.target
+
+[Service]
+Type=forking
+ExecStart=/home/ubuntu/mth-scripts/entrypoint.sh
+ExecStop=/home/ubuntu/quorum-examples/examples/7nodes/stop.sh
+WorkingDirectory=/home/ubuntu/quorum-examples/examples/7nodes
+EnvironmentFile=/home/ubuntu/mth-scripts/environment_vars
+User=ubuntu
+TimeoutSec=900
+
+[Install]
+WantedBy=multi-user.target

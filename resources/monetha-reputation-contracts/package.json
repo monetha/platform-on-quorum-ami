@@ -1,0 +1,17 @@
+{
+  "name": "monetha-reputation-contracts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "truffle-migrate": "truffle migrate",
+    "build-contracts": "node scripts/build-contracts.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "download-git-repo": "^2.0.0",
+    "shelljs": "^0.8.3",
+    "truffle": "^5.0.29"
+  }
+}

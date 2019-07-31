@@ -1,0 +1,203 @@
+{
+    "description": "The template that packer uses to build the AWS EC2 AMI",
+    "min_packer_version": "1.4.2",
+    "variables": {
+        "aws_region": "{{env `AWS_REGION`}}",
+        "aws_access_key": "{{env `AWS_ACCESS_KEY_ID`}}",
+        "aws_secret_key": "{{env `AWS_SECRET_ACCESS_KEY`}}",
+        "aws_session_token": "{{env `AWS_SESSION_TOKEN`}}",
+        "constelation_version": "0.3.2",
+        "constelation_release_name": "constellation-0.3.2-ubuntu1604",
+        "tessera_version": "0.9.2",
+        "quorum_version": "v2.2.4",
+        "quorum_golang_version": "1.9",
+        "quorum_example_version": "368318258c94eca2a30737d634121e129303b45b",
+        "monetha_scripts_folder": "/home/ubuntu/mth-scripts"
+    },
+    "builders": [{
+        "type": "amazon-ebs",
+        "access_key": "{{user `aws_access_key`}}",
+        "secret_key": "{{user `aws_secret_key`}}",
+        "token": "{{user `aws_session_token`}}",
+        "region": "{{user `aws_region`}}",
+        "ami_name": "monetha-platform-on-quorum-ubuntu16-{{ isotime | clean_resource_name }}",
+        "ami_description": "A playground environment of Monetha Platform (https://monetha.io/platform) running on Quorum 7 nodes example (https://github.com/jpmorganchase/quorum-examples). More information can be found in https://github.com/monetha/platform-on-quorum-ami",
+        "instance_type": "t3.large",
+        "ssh_username": "ubuntu",
+        "ssh_timeout": "5m",
+        "ssh_interface": "public_ip",
+        "associate_public_ip_address": true,
+        "source_ami_filter": {
+            "filters": {
+                "virtualization-type": "hvm",
+                "architecture": "x86_64",
+                "name": "*ubuntu-xenial-16.04-amd64-server-*",
+                "block-device-mapping.volume-type": "gp2",
+                "root-device-type": "ebs"
+            },
+            "owners": ["099720109477"],
+            "most_recent": true
+        },
+        "ami_virtualization_type": "hvm",
+        "ebs_optimized": true,
+        "ena_support": true,
+        "force_deregister": true,
+        "force_delete_snapshot": true,
+        "tags": {
+            "OS_Flavour": "Ubuntu",
+            "OS_Version": "Xenial 16.04",
+            "Release": "{{ isotime }}",
+            "Base_AMI_Name": "{{ .SourceAMIName }}"
+        }
+    }],
+    "provisioners": [{
+            "type": "shell",
+            "inline": [
+                "echo \"==================== Wait for cloud-init to complete ====================\"",
+                "cloud-init status --wait"
+            ]
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "echo \"==================== Create dir for MTH scripts ====================\"",
+                "mkdir -p {{user `monetha_scripts_folder`}}"
+            ]
+        },
+        {
+            "type": "shell",
+            "execute_command": "chmod +x {{ .Path }}; sudo {{ .Vars }} {{ .Path }}",
+            "inline": [
+                "echo \"==================== Upgrade and install dependecies with apt-get ====================\"",
+                "add-apt-repository -y ppa:ethereum/ethereum",
+                "apt-get update",
+                "apt-get -y upgrade",
+                "apt-get -y install build-essential unzip libdb-dev libleveldb-dev libsodium-dev zlib1g-dev libtinfo-dev solc sysvbanner wrk software-properties-common default-jdk maven docker.io"
+            ]
+        },
+        {
+            "type": "shell",
+            "execute_command": "chmod +x {{ .Path }}; sudo {{ .Vars }} {{ .Path }}",
+            "inline": [
+                "echo \"==================== Install NodeJS 10 ====================\"",
+                "curl -sL https://deb.nodesource.com/setup_10.x | bash -",
+                "apt-get update",
+                "apt-get -y install nodejs"
+            ]
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "echo \"==================== Get Constellation ====================\"",
+                "wget -q https://github.com/jpmorganchase/constellation/releases/download/v{{user `constelation_version`}}/{{user `constelation_release_name`}}.tar.xz",
+                "tar xfJ {{user `constelation_release_name`}}.tar.xz",
+                "sudo cp {{user `constelation_release_name`}}/constellation-node /usr/local/bin",
+                "sudo chmod 0755 /usr/local/bin/constellation-node",
+                "rm -rf {{user `constelation_release_name`}}",
+                "rm -f {{user `constelation_release_name`}}.tar.xz"
+            ]
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "echo \"==================== Get Tessera ====================\"",
+                "mkdir -p /home/ubuntu/tessera",
+                "wget -O /home/ubuntu/tessera/tessera.jar -q https://oss.sonatype.org/content/groups/public/com/jpmorgan/quorum/tessera-app/{{user `tessera_version`}}/tessera-app-{{user `tessera_version`}}-app.jar",
+                "wget -O /home/ubuntu/tessera/enclave.jar -q https://oss.sonatype.org/content/groups/public/com/jpmorgan/quorum/enclave-jaxrs/{{user `tessera_version`}}/enclave-jaxrs-{{user `tessera_version`}}-server.jar",
+                "echo \"export TESSERA_JAR=/home/ubuntu/tessera/tessera.jar\" >> /home/ubuntu/.bashrc",
+                "echo \"export ENCLAVE_JAR=/home/ubuntu/tessera/enclave.jar\" >> /home/ubuntu/.bashrc",
+                "echo \"TESSERA_JAR=/home/ubuntu/tessera/tessera.jar\" >> {{user `monetha_scripts_folder`}}/environment_vars",
+                "echo \"ENCLAVE_JAR=/home/ubuntu/tessera/enclave.jar\" >> {{user `monetha_scripts_folder`}}/environment_vars"
+            ]
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "echo \"==================== Get Porosity ====================\"",
+                "wget -q https://github.com/jpmorganchase/quorum/releases/download/v1.2.0/porosity",
+                "mv porosity /usr/local/bin",
+                "chmod 0755 /usr/local/bin/porosity"
+            ],
+            "execute_command": "chmod +x {{ .Path }}; sudo {{ .Vars }} {{ .Path }}"
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "echo \"==================== Get and build Quorum ====================\"",
+                "git clone https://github.com/jpmorganchase/quorum.git",
+                "cd quorum",
+                "git checkout tags/{{user `quorum_version`}}",
+                "sudo docker run --rm -v $PWD:/src/ --workdir /src golang:{{user `quorum_golang_version`}} make all",
+                "sudo cp build/bin/geth /usr/local/bin",
+                "sudo cp build/bin/bootnode /usr/local/bin"
+            ]
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "echo \"==================== Get Quorum examples ====================\"",
+                "git clone https://github.com/jpmorganchase/quorum-examples",
+                "cd quorum-examples",
+                "git checkout {{user `quorum_example_version`}}"
+            ]
+        },
+        {
+            "type": "file",
+            "source": "/source/resources/add_cors_domain.patch",
+            "destination": "{{user `monetha_scripts_folder`}}/add_cors_domain.patch"
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "echo \"==================== Patch Quorum examples ====================\"",
+                "cd quorum-examples",
+                "git apply --apply {{user `monetha_scripts_folder`}}/add_cors_domain.patch"
+            ]
+        },
+        {
+            "type": "file",
+            "source": "/source/resources/quorum.service",
+            "destination": "{{user `monetha_scripts_folder`}}/quorum.service"
+        },
+        {
+            "type": "file",
+            "source": "/source/resources/entrypoint.sh",
+            "destination": "{{user `monetha_scripts_folder`}}/entrypoint.sh"
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "echo \"==================== Configure Quorum as a service ====================\"",
+                "chmod a+x {{user `monetha_scripts_folder`}}/entrypoint.sh",
+                "sudo cp {{user `monetha_scripts_folder`}}/quorum.service /lib/systemd/system/",
+                "sudo systemctl enable quorum",
+                "sudo mkdir -p /var/log/quorum",
+                "sudo chown ubuntu. /var/log/quorum",
+                "sudo chmod 777 /var/log/quorum"
+            ]
+        },
+        {
+            "type": "file",
+            "source": "/source/resources/monetha-reputation-contracts",
+            "destination": "/home/ubuntu"
+        },
+        {
+            "type": "file",
+            "source": "/source/resources/motd",
+            "destination": "{{user `monetha_scripts_folder`}}/motd"
+        },
+        {
+            "type": "shell",
+            "inline": [
+                "echo \"==================== Update MotD ====================\"",
+                "cp -f {{user `monetha_scripts_folder`}}/motd /etc/motd"
+            ],
+            "execute_command": "chmod +x {{ .Path }}; sudo {{ .Vars }} {{ .Path }}"
+        },
+        {
+            "type": "file",
+            "source": "/source/resources/README.md",
+            "destination": "/home/ubuntu/README.md"
+        }
+    ]
+}
