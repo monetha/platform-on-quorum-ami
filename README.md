@@ -52,3 +52,22 @@ This AMI is based on [Quorum 7 nodes example](https://github.com/jpmorganchase/q
 **Please note** that you will need to add these ports to the inbound rules for the AWS Security Group(s) to be able to reach them from outside of the instance.
 
 ## List of AMIs
+
+| Region | AMI ID |
+|---|---|
+| ap-northeast-1 | ami-0ed9317deee6a31ab |
+| ap-northeast-2 | ami-03ad248d7ead9b007 |
+| ap-south-1 | ami-056d1404d94800529 |
+| ap-southeast-1 | ami-056b5e35fd1cc1fd4 |
+| ap-southeast-2 | ami-0ee95e34019191b70 |
+| ca-central-1 | ami-05e90bca87f8e9f08 |
+| eu-central-1 | ami-0006e03d602ad024c |
+| eu-north-1 | ami-069811847d42337cc |
+| eu-west-1 | ami-0cfb9c071bf75dae7 |
+| eu-west-2 | ami-058fe3ce006fc936a |
+| eu-west-3 | ami-05e2dfc55b1590404 |
+| sa-east-1 | ami-02964b43191f77a0f |
+| us-east-1 | ami-0526e67a852e0bb97 |
+| us-east-2 | ami-0c9a13dca5eb1d6e4 |
+| us-west-1 | ami-01e94a50cab3cbfef |
+| us-west-2 | ami-0b088d7eb8e6eb59c |
