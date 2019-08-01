@@ -2,7 +2,7 @@
 
 This is a playground environment of [Monetha Platform](https://monetha.io/platform) running on Quorum blockchain using Raft consensus protocol (based on [Quorum 7 nodes example](https://github.com/jpmorganchase/quorum-examples/tree/master/examples/7nodes)).
 
-This AMI allows you to jump straight into building apps using Monetha's [verifiable-data SDK](https://github.com/monetha/reputation-js-sdk), as described in our [guide to identity and data management on Quorum](https://blog.monetha.io/guide-quorum-digital-identity/).
+This AMI allows you to jump straight into building apps using Monetha's [verifiable data SDK](https://github.com/monetha/js-verifiable-data), as described in our [guide to identity and data management on Quorum](https://blog.monetha.io/guide-quorum-digital-identity/#Create).
 
 The scripts in this repository build an AWS [AMI image](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AMIs.html) that allows you to launch a pre-configured [EC2 instance](https://aws.amazon.com/ec2/) with all of the needed tools inside.
 
@@ -33,7 +33,7 @@ You can find the contract addresses in the `/home/ubuntu/monetha-reputation-cont
 
 ## Explore the digital identities 
 
-You can use Monetha's [passport-scanner](https://github.com/monetha/passport-scanner) app to explore the digital identities on your Quorum blockchain. Just download the latest [passport-scanner release](https://github.com/monetha/passport-scanner/releases), open it, and point it to your Quorum nodes JSON-RPC port. You can use the following command to access the passport-scanner app (please note that it depends on Docker):
+You can use Monetha's [passport-scanner](https://github.com/monetha/passport-scanner) app to explore the digital identities on your Quorum blockchain. You can either follow the projects readme and setup the latest and greatest scanner version or you can download the latest [passport-scanner release](https://github.com/monetha/passport-scanner/releases), open it, and point it to your Quorum nodes JSON-RPC port. You can use the following command to access the passport-scanner app (please note that it depends on Docker):
 ```shell
 docker run -it --rm --name nginx --publish 80:80 -v </path/to/extracted/passport-scanner/files>:/usr/share/nginx/html:ro nginx
 ``` 
